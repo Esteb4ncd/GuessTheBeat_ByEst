@@ -21,13 +21,13 @@ export default function Game() {
   const TOTAL_QUESTIONS = 10;
 
   const categories = [
-    { value: 'all', label: '🎵 All Music' },
-    { value: '2010s', label: '📅 2010s Hits' },
-    { value: 'pop', label: '🎤 Pop' },
-    { value: 'r&b', label: '🎹 R&B' },
-    { value: 'rock', label: '🎸 Rock' },
-    { value: 'hip-hop', label: '🎧 Hip-Hop' },
-    { value: 'spanish', label: '🇪🇸 Spanish/Latin' },
+    { value: 'all', label: 'All Music' },
+    { value: '2010s', label: '2010s Hits' },
+    { value: 'pop', label: 'Pop' },
+    { value: 'r&b', label: 'R&B' },
+    { value: 'rock', label: 'Rock' },
+    { value: 'hip-hop', label: 'Hip-Hop' },
+    { value: 'spanish', label: 'Spanish/Latin' },
   ];
 
   useEffect(() => {
@@ -137,7 +137,7 @@ export default function Game() {
     return (
       <div className={styles.container}>
         <div className={styles.startScreen}>
-          <h1 className={styles.title}>🎵 Guess The Beat by EST 🎵</h1>
+          <h1 className={styles.title}>Guess The Beat by EST</h1>
           <p className={styles.description}>
             Listen to the first 5 seconds of a song and guess which one it is!
           </p>
@@ -215,7 +215,7 @@ export default function Game() {
                 onClick={playPreview}
                 disabled={isPlaying}
               >
-                {isPlaying ? '⏸️ Playing...' : '▶️ Play Preview (5 seconds)'}
+                {isPlaying ? 'Playing...' : 'Play Preview (5 seconds)'}
               </button>
             </div>
 
@@ -242,8 +242,8 @@ export default function Game() {
                         <strong>{option.name}</strong>
                         <span className={styles.artist}>{option.artists[0]?.name}</span>
                       </div>
-                      {showCorrect && <span className={styles.checkmark}>✓</span>}
-                      {showWrong && <span className={styles.cross}>✗</span>}
+                      {showCorrect && <span className={styles.checkmark}>Correct</span>}
+                      {showWrong && <span className={styles.cross}>Wrong</span>}
                     </div>
                   </button>
                 );
