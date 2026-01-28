@@ -4,10 +4,16 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import { gsap } from 'gsap';
 import styles from './LandingPage.module.css';
 
-export default function LandingPage({ onPlay }) {
+export default function LandingPage({ onPlay, initialStep = 'landing' }) {
   const [backgroundTracks, setBackgroundTracks] = useState([]);
   const [currentTrackIndex, setCurrentTrackIndex] = useState(0);
-  const [musicEnabled, setMusicEnabled] = useState(false);
+  const [musicEnabled, setMusicEnabled] = useState(true);
+  const [step, setStep] = useState(initialStep); // 'landing' | 'categories'
+  useEffect(() => {
+    setStep(initialStep || 'landing');
+  }, [initialStep]);
+
+  const [selectedCategory, setSelectedCategory] = useState('all');
   const audioRef = useRef(null);
   const titleRef = useRef(null);
   const byEstRef = useRef(null);
@@ -16,6 +22,8 @@ export default function LandingPage({ onPlay }) {
   const gradientRef = useRef(null);
   const musicIntervalsRef = useRef({ fadeTimeout: null, volumeChangeInterval: null, fadeOutInterval: null });
   const hasStartedMusicRef = useRef(false);
+  const hasInteractedRef = useRef(false);
+  const autoStartedRef = useRef(false);
 
   // Fetch background music tracks
   useEffect(() => {
@@ -35,6 +43,92 @@ export default function LandingPage({ onPlay }) {
     };
 
     fetchBackgroundTracks();
+  }, []);
+
+  const categories = [
+    { value: 'all', label: 'All Music' },
+    { value: 'pop', label: 'Pop' },
+    { value: 'r&b', label: 'R&B' },
+    { value: 'rock', label: 'Rock' },
+    { value: 'hip-hop', label: 'Hip-Hop' },
+    { value: 'spanish', label: 'Spanish/Latin' },
+  ];
+
+  // Autoplay background music on page open (best-effort):
+  // 1) Try unmuted play (some browsers allow it)
+  // 2) If blocked, fall back to muted autoplay (widely allowed)
+  // Either way, the playlist/transition logic remains unchanged.
+  useEffect(() => {
+    if (!musicEnabled) return;
+    if (!audioRef.current) return;
+    if (!backgroundTracks.length) return;
+    if (autoStartedRef.current) return;
+
+    const audio = audioRef.current;
+    const track = backgroundTracks[currentTrackIndex] || backgroundTracks[0];
+    if (!track?.preview_url) return;
+
+    autoStartedRef.current = true;
+
+    const tryPlay = async ({ muted }) => {
+      audio.muted = muted;
+      audio.volume = 0;
+      audio.src = track.preview_url;
+      try {
+        await audio.play();
+        hasStartedMusicRef.current = true;
+        // If unmuted autoplay worked, fade in to target volume
+        if (!muted) {
+          gsap.killTweensOf(audio);
+          gsap.to(audio, { volume: 0.3, duration: 1.2, ease: 'power1.out' });
+        }
+        return true;
+      } catch (e) {
+        return false;
+      }
+    };
+
+    (async () => {
+      const okUnmuted = await tryPlay({ muted: false });
+      if (okUnmuted) return;
+
+      // fallback: muted autoplay
+      await tryPlay({ muted: true });
+    })();
+  }, [musicEnabled, backgroundTracks, currentTrackIndex]);
+
+  const switchMusicToCategory = useCallback(async (category) => {
+    const audio = audioRef.current;
+    if (!audio) return;
+
+    // Fade down current
+    gsap.killTweensOf(audio);
+    gsap.to(audio, { volume: 0, duration: 0.6, ease: 'power1.inOut' });
+
+    try {
+      const response = await fetch(`/api/deezer/tracks?limit=25&category=${category}`);
+      const data = await response.json();
+      if (!response.ok || !data.tracks?.length) return;
+
+      const next = data.tracks[Math.floor(Math.random() * data.tracks.length)];
+      if (!next?.preview_url) return;
+
+      // Switch source after fade down
+      setTimeout(() => {
+        audio.src = next.preview_url;
+        audio.currentTime = 0;
+        // keep muted state consistent
+        audio.muted = !hasInteractedRef.current;
+        audio.play().catch(() => {});
+        // Fade back up if user has interacted (audible), else keep at 0
+        if (hasInteractedRef.current) {
+          gsap.killTweensOf(audio);
+          gsap.to(audio, { volume: 0.3, duration: 0.9, ease: 'power1.out' });
+        }
+      }, 650);
+    } catch {
+      // ignore
+    }
   }, []);
 
   // GSAP animations on mount
@@ -159,7 +253,7 @@ export default function LandingPage({ onPlay }) {
       const track = backgroundTracks[trackIndex];
       if (!track?.preview_url) return false;
 
-      // Ensure first play happens from a user gesture to avoid autoplay blocking.
+      // If autoplay failed entirely, require a gesture for the first successful play.
       if (!fromUserGesture && !hasStartedMusicRef.current) return false;
 
       // Pause and reset before changing src to avoid AbortError
@@ -170,6 +264,7 @@ export default function LandingPage({ onPlay }) {
       
       audio.src = track.preview_url;
       audio.volume = 0;
+      audio.muted = !hasInteractedRef.current;
 
       // Wait for audio to be ready before playing
       const playAudio = async () => {
@@ -268,6 +363,7 @@ export default function LandingPage({ onPlay }) {
       
       audio.src = track.preview_url;
       audio.volume = 0;
+      audio.muted = !hasInteractedRef.current;
 
       // If we've not started music from a user gesture yet, do not attempt play() here.
       if (!hasStartedMusicRef.current) return;
@@ -387,7 +483,11 @@ export default function LandingPage({ onPlay }) {
 
     audio.addEventListener('ended', handleEnded);
     audio.addEventListener('error', handleError);
-    // Do not auto-start here. First play must come from a user gesture.
+
+    // If autoplay (muted or unmuted) succeeded, keep the playlist moving.
+    if (hasStartedMusicRef.current) {
+      playNextTrack(currentTrackIndex);
+    }
 
     return () => {
       isMounted = false;
@@ -482,23 +582,122 @@ export default function LandingPage({ onPlay }) {
     fadeOutMusic(transitionToGame);
   };
 
-  // Enable music on first user interaction (click anywhere)
+  // First interaction = enable audio (unmute + fade in).
+  // If autoplay was blocked entirely, start playback here.
   const handleUserInteraction = async () => {
-    if (!musicEnabled) {
-      setMusicEnabled(true);
+    hasInteractedRef.current = true;
+    if (!musicEnabled) setMusicEnabled(true);
+
+    const audio = audioRef.current;
+    if (audio) {
+      audio.muted = false;
+      gsap.killTweensOf(audio);
+      gsap.to(audio, { volume: 0.3, duration: 1.2, ease: 'power1.out' });
     }
 
-    // Only do the "first play" once, and do it inside the user gesture.
-    if (hasStartedMusicRef.current) return;
-    if (!backgroundTracks.length) return;
-
-    const started = await startTrack(currentTrackIndex, { fromUserGesture: true });
-    if (started) {
-      hasStartedMusicRef.current = true;
-      // Trigger useEffect to start transitions & subsequent tracks
-      setCurrentTrackIndex((prev) => prev);
+    if (!hasStartedMusicRef.current && backgroundTracks.length) {
+      const started = await startTrack(currentTrackIndex, { fromUserGesture: true });
+      if (started) {
+        hasStartedMusicRef.current = true;
+        setCurrentTrackIndex((prev) => prev);
+      }
     }
   };
+
+  const goToCategories = () => {
+    setStep('categories');
+  };
+
+  const goToLanding = () => {
+    setStep('landing');
+  };
+
+  const startGame = () => {
+    // Fade out background music before entering game
+    const audio = audioRef.current;
+    if (audio && !audio.paused) {
+      gsap.killTweensOf(audio);
+      gsap.to(audio, {
+        volume: 0,
+        duration: 0.8,
+        ease: 'power1.inOut',
+        onComplete: () => {
+          audio.pause();
+          audio.currentTime = 0;
+          onPlay(selectedCategory);
+        },
+      });
+      return;
+    }
+    onPlay(selectedCategory);
+  };
+
+  if (step === 'categories') {
+    return (
+      <div
+        ref={containerRef}
+        className={styles.landingContainer}
+        onClick={handleUserInteraction}
+        onTouchStart={handleUserInteraction}
+      >
+        <div ref={gradientRef} className={styles.gradientBackground} />
+        <audio ref={audioRef} preload="auto" muted />
+
+        <div className={styles.categoriesContent}>
+          <div className={styles.topBar}>
+            <button
+              className={styles.backButton}
+              type="button"
+              aria-label="Go back"
+              onClick={(e) => {
+                e.stopPropagation();
+                goToLanding();
+              }}
+            >
+              <img src="/assets/goBack_Button.svg" alt="" />
+            </button>
+          </div>
+          <div className={styles.categoriesHeader}>
+            <h2 className={styles.categoriesTitle}>Pick a category!</h2>
+            <p className={styles.categoriesSubtitle}>
+              Listen to a short preview and pick the correct song from the choices.
+            </p>
+          </div>
+
+          <div className={styles.categoryGrid}>
+            {categories.map((c) => (
+              <button
+                key={c.value}
+                className={`${styles.categoryTile} ${selectedCategory === c.value ? styles.categoryTileSelected : ''}`}
+                onClick={async (e) => {
+                  e.stopPropagation();
+                  await handleUserInteraction();
+                  setSelectedCategory(c.value);
+                  switchMusicToCategory(c.value);
+                }}
+              >
+                {c.label}
+              </button>
+            ))}
+          </div>
+
+          <div className={styles.categoriesActions}>
+            <button
+              className={styles.primaryAction}
+              disabled={!selectedCategory}
+              onClick={async (e) => {
+                e.stopPropagation();
+                await handleUserInteraction();
+                startGame();
+              }}
+            >
+              Start Game
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div 
@@ -508,7 +707,7 @@ export default function LandingPage({ onPlay }) {
       onTouchStart={handleUserInteraction}
     >
       <div ref={gradientRef} className={styles.gradientBackground} />
-      <audio ref={audioRef} preload="auto" />
+      <audio ref={audioRef} preload="auto" muted />
       
       <div className={styles.content}>
         <div className={styles.titleContainer}>
@@ -527,10 +726,10 @@ export default function LandingPage({ onPlay }) {
           onClick={async (e) => {
             e.stopPropagation();
             await handleUserInteraction();
-            handlePlayClick();
+            goToCategories();
           }}
         >
-          Play
+          Start
         </button>
       </div>
     </div>
