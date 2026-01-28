@@ -1,9 +1,9 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import styles from './Game.module.css';
 
-export default function Game() {
+export default function Game({ initialCategory = 'all', autoStart = false, onBack }) {
   const [tracks, setTracks] = useState([]);
   const [currentTrackIndex, setCurrentTrackIndex] = useState(0);
   const [options, setOptions] = useState([]);
@@ -22,7 +22,6 @@ export default function Game() {
 
   const categories = [
     { value: 'all', label: 'All Music' },
-    { value: '2010s', label: '2010s Hits' },
     { value: 'pop', label: 'Pop' },
     { value: 'r&b', label: 'R&B' },
     { value: 'rock', label: 'Rock' },
@@ -30,11 +29,30 @@ export default function Game() {
     { value: 'spanish', label: 'Spanish/Latin' },
   ];
 
+  const generateOptions = useCallback(() => {
+    if (tracks.length === 0) return;
+
+    const currentTrack = tracks[currentTrackIndex];
+    const wrongTracks = tracks
+      .filter((_, index) => index !== currentTrackIndex)
+      .sort(() => Math.random() - 0.5)
+      .slice(0, 3);
+
+    const allOptions = [
+      { ...currentTrack, isCorrect: true },
+      ...wrongTracks.map((track) => ({ ...track, isCorrect: false })),
+    ].sort(() => Math.random() - 0.5);
+
+    setOptions(allOptions);
+    setSelectedAnswer(null);
+    setShowResult(false);
+  }, [tracks, currentTrackIndex]);
+
   useEffect(() => {
     if (gameStarted && tracks.length > 0 && currentTrackIndex < TOTAL_QUESTIONS) {
       generateOptions();
     }
-  }, [currentTrackIndex, tracks, gameStarted]);
+  }, [currentTrackIndex, tracks, gameStarted, generateOptions]);
 
   const startGame = async () => {
     setLoading(true);
@@ -63,24 +81,18 @@ export default function Game() {
     }
   };
 
-  const generateOptions = () => {
-    if (tracks.length === 0) return;
-
-    const currentTrack = tracks[currentTrackIndex];
-    const wrongTracks = tracks
-      .filter((_, index) => index !== currentTrackIndex)
-      .sort(() => Math.random() - 0.5)
-      .slice(0, 3);
-
-    const allOptions = [
-      { ...currentTrack, isCorrect: true },
-      ...wrongTracks.map((track) => ({ ...track, isCorrect: false })),
-    ].sort(() => Math.random() - 0.5);
-
-    setOptions(allOptions);
-    setSelectedAnswer(null);
-    setShowResult(false);
-  };
+  // Auto-start game when coming from landing/categories flow
+  useEffect(() => {
+    if (!autoStart) return;
+    if (gameStarted || loading) return;
+    setSelectedCategory(initialCategory || 'all');
+    // Fire startGame on next tick so selectedCategory is updated
+    const t = setTimeout(() => {
+      startGame();
+    }, 0);
+    return () => clearTimeout(t);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [autoStart, initialCategory]);
 
   const playPreview = () => {
     if (audioRef.current) {
@@ -133,11 +145,22 @@ export default function Game() {
 
   const currentTrack = tracks[currentTrackIndex];
 
+  // Minimal loading screen (requested)
+  if (!gameStarted && loading) {
+    return (
+      <div className={styles.loadingScreen}>
+        <div className={styles.loadingText}>
+          Loading tracks<span className={styles.loadingDots} aria-hidden="true" />
+        </div>
+      </div>
+    );
+  }
+
   if (!gameStarted) {
     return (
       <div className={styles.container}>
         <div className={styles.startScreen}>
-          <h1 className={styles.title}>Guess The Beat by EST</h1>
+          <h1 className={styles.title}>Guess The Beat</h1>
           <p className={styles.description}>
             Listen to the first 5 seconds of a song and guess which one it is!
           </p>
@@ -194,6 +217,9 @@ export default function Game() {
   return (
     <div className={styles.container}>
       <div className={styles.gameHeader}>
+        <button className={styles.backButton} type="button" aria-label="Go back" onClick={onBack}>
+          <img src="/assets/goBack_Button.svg" alt="" />
+        </button>
         <div className={styles.score}>Score: {score} / {TOTAL_QUESTIONS}</div>
         <div className={styles.questionNumber}>
           Question {currentTrackIndex + 1} / {TOTAL_QUESTIONS}

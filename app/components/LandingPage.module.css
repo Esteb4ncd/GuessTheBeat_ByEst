@@ -1,0 +1,323 @@
+.landingContainer {
+  position: relative;
+  width: 100vw;
+  height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.gradientBackground {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  z-index: 0;
+}
+
+.content {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  gap: 3rem;
+  padding: 2rem;
+  width: 100%;
+  max-width: 1400px;
+  height: 100%;
+}
+
+.categoriesContent {
+  position: relative;
+  z-index: 2;
+  width: 100%;
+  max-width: 1100px;
+  padding: 3rem 2rem;
+  display: flex;
+  flex-direction: column;
+  gap: 2.5rem;
+  text-align: center;
+}
+
+.topBar {
+  display: flex;
+  justify-content: flex-start;
+}
+
+.backButton {
+  background: transparent;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  transition: transform 0.18s ease, opacity 0.18s ease;
+  opacity: 0.92;
+  line-height: 0;
+}
+
+.backButton:hover {
+  transform: translateY(-2px);
+  opacity: 1;
+}
+
+.backButton img {
+  display: block;
+  width: 80px;
+  height: auto;
+}
+
+.categoriesHeader {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  align-items: center;
+}
+
+.categoriesTitle {
+  font-family: var(--font-londrina-sketch), "Londrina Sketch", sans-serif;
+  font-weight: 400;
+  font-size: clamp(2.6rem, 5vw, 4.2rem);
+  line-height: 1;
+  color: rgba(255, 255, 255, 0.98);
+  text-shadow: 0 4px 22px rgba(0, 0, 0, 0.25);
+  margin: 0;
+}
+
+.categoriesSubtitle {
+  font-family: var(--font-geist-sans), system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+  font-size: clamp(1.05rem, 2vw, 1.35rem);
+  line-height: 1.3;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.85);
+  margin: 0;
+  max-width: 62ch;
+}
+
+.instructions {
+  font-family: var(--font-geist-sans), system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+  font-size: clamp(1.6rem, 3vw, 2.6rem);
+  line-height: 1.15;
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.95);
+  text-shadow: 0 4px 20px rgba(0, 0, 0, 0.25);
+  margin: 0;
+}
+
+.categoryGrid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 1.25rem;
+}
+
+.categoryTile {
+  background: rgba(255, 255, 255, 0.14);
+  border: 2px solid rgba(255, 255, 255, 0.22);
+  border-radius: 16px;
+  padding: 1.25rem 1.25rem;
+  color: rgba(255, 255, 255, 0.95);
+  font-family: var(--font-geist-sans), system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+  font-size: 1.05rem;
+  font-weight: 650;
+  cursor: pointer;
+  backdrop-filter: blur(12px);
+  transition: transform 0.18s ease, border-color 0.18s ease, background 0.18s ease;
+  min-height: 92px;
+  display: flex;
+  align-items: flex-end;
+  justify-content: flex-start;
+}
+
+.categoryTile:hover {
+  transform: translateY(-3px);
+  border-color: rgba(255, 255, 255, 0.55);
+  background-image: linear-gradient(
+    120deg,
+    rgba(0, 242, 254, 0.4) 0%,
+    rgba(118, 75, 162, 0.4) 50%,
+    rgba(245, 87, 108, 0.4) 100%
+  );
+  background-size: 260% 260%;
+  animation: categoryGradient 3s linear infinite;
+}
+
+.categoryTileSelected {
+  background-image: linear-gradient(
+    120deg,
+    #00f2fe 0%,
+    #764ba2 50%,
+    #f5576c 100%
+  );
+  background-size: 260% 260%;
+  animation: categoryGradient 3s linear infinite;
+  border-color: rgba(255, 255, 255, 0.75);
+  box-shadow:
+    0 18px 45px rgba(0, 0, 0, 0.28),
+    0 0 0 1px rgba(255, 255, 255, 0.18) inset;
+}
+
+.categoriesActions {
+  display: flex;
+  justify-content: center;
+}
+
+.primaryAction {
+  background: transparent;
+  border: none;
+  background-image: url('/assets/Frame.svg');
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: contain;
+  color: rgba(255, 255, 255, 0.98);
+  padding: 2rem 4rem;
+  font-size: 1.25rem;
+  border-radius: 0;
+  cursor: pointer;
+  font-weight: 600;
+  transition: all 0.3s ease;
+  font-family: var(--font-barrio), "Barrio", system-ui;
+  letter-spacing: 0.04em;
+}
+
+.primaryAction:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.primaryAction:hover:not(:disabled) {
+  transform: translateY(-2px);
+  filter: brightness(1.05);
+}
+
+.titleContainer {
+  position: relative;
+  display: inline-block;
+}
+
+.title {
+  font-family: var(--font-londrina-sketch), "Londrina Sketch", sans-serif;
+  font-weight: 400;
+  font-style: normal;
+  font-size: clamp(4rem, 15vw, 12rem);
+  color: white;
+  margin: 0;
+  text-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+  letter-spacing: 0.02em;
+  line-height: 1.1;
+  text-align: left;
+  display: flex;
+  flex-direction: column;
+}
+
+.titleLine {
+  display: block;
+}
+
+.byEst {
+  position: absolute;
+  bottom: 0.5em;
+  right: 0.15em;
+  font-family: var(--font-londrina-sketch), "Londrina Sketch", sans-serif;
+  font-weight: 400;
+  font-size: clamp(1.6rem, 4.2vw, 3.2rem);
+  color: white;
+  background: rgba(255, 255, 255, 0.14);
+  border: 2px solid rgba(255, 255, 255, 0.22);
+  padding: 0.12em 0.38em 0.16em;
+  border-radius: 999px;
+  backdrop-filter: blur(10px);
+  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+  transform: rotate(-18deg);
+  transform-origin: bottom right;
+  white-space: nowrap;
+  z-index: 2;
+}
+
+.playButton {
+  background: transparent;
+  border: none;
+  background-image: url('/assets/Frame.svg');
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: contain;
+  color: rgba(255, 255, 255, 0.98);
+  padding: 3.4rem 6.8rem;
+  font-size: clamp(3rem, 6vw, 5.2rem);
+  border-radius: 0;
+  cursor: pointer;
+  font-weight: 400;
+  box-shadow: none;
+  transition: all 0.3s ease;
+  font-family: var(--font-barrio), "Barrio", system-ui;
+  letter-spacing: 0.05em;
+  opacity: 1;
+  transform: scale(1);
+  visibility: visible;
+  align-self: center;
+  margin-right: 10rem;
+}
+
+.playButton:hover {
+  transform: translateY(-3px);
+  filter: brightness(1.05);
+}
+
+.playButton:active {
+  transform: translateY(-1px);
+  filter: brightness(0.98);
+}
+
+@keyframes categoryGradient {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+
+@media (max-width: 768px) {
+  .content {
+    flex-direction: column;
+    gap: 2rem;
+    padding: 2rem;
+    align-items: flex-start;
+    justify-content: center;
+  }
+
+  .categoriesContent {
+    padding: 2rem;
+    gap: 2rem;
+  }
+
+  .categoryGrid {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .titleContainer {
+    width: 100%;
+  }
+
+  .title {
+    font-size: clamp(3rem, 20vw, 8rem);
+  }
+
+  .byEst {
+    font-size: clamp(1.5rem, 5vw, 2.5rem);
+    right: 0.1em;
+    bottom: 0.3em;
+  }
+
+  .playButton {
+    padding: 2.4rem 4.8rem;
+    font-size: clamp(2.4rem, 8vw, 4rem);
+    align-self: center;
+  }
+}
