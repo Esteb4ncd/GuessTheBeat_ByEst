@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { gsap } from 'gsap';
 import styles from './LandingPage.module.css';
 
@@ -10,10 +10,12 @@ export default function LandingPage({ onPlay }) {
   const [musicEnabled, setMusicEnabled] = useState(false);
   const audioRef = useRef(null);
   const titleRef = useRef(null);
+  const byEstRef = useRef(null);
   const buttonRef = useRef(null);
   const containerRef = useRef(null);
   const gradientRef = useRef(null);
   const musicIntervalsRef = useRef({ fadeTimeout: null, volumeChangeInterval: null, fadeOutInterval: null });
+  const hasStartedMusicRef = useRef(false);
 
   // Fetch background music tracks
   useEffect(() => {
@@ -38,16 +40,19 @@ export default function LandingPage({ onPlay }) {
   // GSAP animations on mount
   useEffect(() => {
     const title = titleRef.current;
+    const byEst = byEstRef.current;
     const button = buttonRef.current;
     
     if (!title || !button) return;
 
     let titleAnimation = null;
+    let byEstAnimation = null;
     let buttonAnimation = null;
     let pulseAnimation = null;
 
     // Set initial states
     gsap.set(title, { opacity: 0, y: -50 });
+    if (byEst) gsap.set(byEst, { opacity: 0, scale: 0.8, rotation: -15 });
     gsap.set(button, { opacity: 0, y: 50, scale: 1 });
 
     // Animate title
@@ -57,6 +62,18 @@ export default function LandingPage({ onPlay }) {
       duration: 1,
       ease: 'power3.out',
     });
+
+    // Animate by EST
+    if (byEst) {
+      byEstAnimation = gsap.to(byEst, {
+        opacity: 1,
+        scale: 1,
+        rotation: -12,
+        duration: 0.8,
+        delay: 0.5,
+        ease: 'back.out(1.7)',
+      });
+    }
 
     // Animate button in
     buttonAnimation = gsap.to(button, {
@@ -81,6 +98,7 @@ export default function LandingPage({ onPlay }) {
 
     return () => {
       if (titleAnimation) titleAnimation.kill();
+      if (byEstAnimation) byEstAnimation.kill();
       if (buttonAnimation) buttonAnimation.kill();
       if (pulseAnimation) pulseAnimation.kill();
     };
@@ -132,6 +150,82 @@ export default function LandingPage({ onPlay }) {
     };
   }, []);
 
+  const startTrack = useCallback(
+    async (trackIndex, { fromUserGesture = false } = {}) => {
+      const audio = audioRef.current;
+      if (!audio) return false;
+      if (!backgroundTracks.length) return false;
+
+      const track = backgroundTracks[trackIndex];
+      if (!track?.preview_url) return false;
+
+      // Ensure first play happens from a user gesture to avoid autoplay blocking.
+      if (!fromUserGesture && !hasStartedMusicRef.current) return false;
+
+      // Pause and reset before changing src to avoid AbortError
+      if (!audio.paused) {
+        audio.pause();
+      }
+      audio.currentTime = 0;
+      
+      audio.src = track.preview_url;
+      audio.volume = 0;
+
+      // Wait for audio to be ready before playing
+      const playAudio = async () => {
+        try {
+          await audio.play();
+          return true;
+        } catch (error) {
+          // Ignore AbortError - happens when src changes during play
+          if (error?.name === 'AbortError') {
+            return false;
+          }
+          // NotAllowedError can happen if a browser blocks autoplay.
+          if (error?.name !== 'NotAllowedError') {
+            console.error('Error playing background music:', error);
+          }
+          return false;
+        }
+      };
+
+      if (audio.readyState >= 2) {
+        // Already loaded
+        return await playAudio();
+      } else {
+        // Wait for canplay event
+        return new Promise((resolve) => {
+          const handleCanPlay = async () => {
+            audio.removeEventListener('canplay', handleCanPlay);
+            audio.removeEventListener('error', handleError);
+            const result = await playAudio();
+            resolve(result);
+          };
+          
+          const handleError = () => {
+            audio.removeEventListener('canplay', handleCanPlay);
+            audio.removeEventListener('error', handleError);
+            resolve(false);
+          };
+          
+          audio.addEventListener('canplay', handleCanPlay);
+          audio.addEventListener('error', handleError);
+          
+          // Fallback timeout
+          setTimeout(async () => {
+            if (audio.readyState >= 2) {
+              audio.removeEventListener('canplay', handleCanPlay);
+              audio.removeEventListener('error', handleError);
+              const result = await playAudio();
+              resolve(result);
+            }
+          }, 500);
+        });
+      }
+    },
+    [backgroundTracks]
+  );
+
   // Handle background music with smooth volume transitions
   useEffect(() => {
     if (backgroundTracks.length === 0 || !audioRef.current || !musicEnabled) return;
@@ -167,22 +261,60 @@ export default function LandingPage({ onPlay }) {
         intervals.fadeTimeout = null;
       }
 
+      // Wait for current play to finish or pause before changing src
+      if (!audio.paused) {
+        audio.pause();
+      }
+      
       audio.src = track.preview_url;
       audio.volume = 0;
-      
-      audio.play().catch((error) => {
-        // Only log if it's not an autoplay error (browser security feature)
-        if (error.name !== 'NotAllowedError') {
-          console.error('Error playing background music:', error);
+
+      // If we've not started music from a user gesture yet, do not attempt play() here.
+      if (!hasStartedMusicRef.current) return;
+
+      // Wait for audio to load before playing to avoid AbortError
+      const playAudio = () => {
+        const playPromise = audio.play();
+        if (playPromise !== undefined) {
+          playPromise.catch((error) => {
+            // Ignore AbortError - it happens when src changes during play
+            if (error?.name === 'AbortError') {
+              return;
+            }
+            // NotAllowedError can happen if a browser blocks autoplay.
+            if (error?.name !== 'NotAllowedError') {
+              console.error('Error playing background music:', error);
+            }
+            if (isMounted) {
+              const nextIndex = (trackIndex + 1) % backgroundTracks.length;
+              setTimeout(() => {
+                if (isMounted) setCurrentTrackIndex(nextIndex);
+              }, 1000);
+            }
+          });
         }
-        if (isMounted) {
-          // Try next track on error
-          const nextIndex = (trackIndex + 1) % backgroundTracks.length;
-          setTimeout(() => {
-            if (isMounted) setCurrentTrackIndex(nextIndex);
-          }, 1000);
-        }
-      });
+      };
+
+      // Wait for audio to be ready
+      if (audio.readyState >= 2) {
+        // Already loaded
+        playAudio();
+      } else {
+        // Wait for canplay event
+        const handleCanPlay = () => {
+          audio.removeEventListener('canplay', handleCanPlay);
+          playAudio();
+        };
+        audio.addEventListener('canplay', handleCanPlay);
+        
+        // Fallback: try after a short delay
+        setTimeout(() => {
+          if (isMounted && audio.readyState >= 2) {
+            audio.removeEventListener('canplay', handleCanPlay);
+            playAudio();
+          }
+        }, 100);
+      }
 
       // Fade in
       const fadeInDuration = 2000; // 2 seconds
@@ -255,11 +387,7 @@ export default function LandingPage({ onPlay }) {
 
     audio.addEventListener('ended', handleEnded);
     audio.addEventListener('error', handleError);
-    
-    // Only start playing if music is enabled (after user interaction)
-    if (musicEnabled) {
-      playNextTrack(currentTrackIndex);
-    }
+    // Do not auto-start here. First play must come from a user gesture.
 
     return () => {
       isMounted = false;
@@ -334,8 +462,9 @@ export default function LandingPage({ onPlay }) {
 
     const transitionToGame = () => {
       // Animate out UI elements
+      const byEst = byEstRef.current;
       if (title && button) {
-        gsap.to([title, button], {
+        gsap.to([title, button, byEst].filter(Boolean), {
           opacity: 0,
           y: -50,
           duration: 0.5,
@@ -353,10 +482,21 @@ export default function LandingPage({ onPlay }) {
     fadeOutMusic(transitionToGame);
   };
 
-  // Enable music on first user interaction
-  const handleUserInteraction = () => {
+  // Enable music on first user interaction (click anywhere)
+  const handleUserInteraction = async () => {
     if (!musicEnabled) {
       setMusicEnabled(true);
+    }
+
+    // Only do the "first play" once, and do it inside the user gesture.
+    if (hasStartedMusicRef.current) return;
+    if (!backgroundTracks.length) return;
+
+    const started = await startTrack(currentTrackIndex, { fromUserGesture: true });
+    if (started) {
+      hasStartedMusicRef.current = true;
+      // Trigger useEffect to start transitions & subsequent tracks
+      setCurrentTrackIndex((prev) => prev);
     }
   };
 
@@ -366,20 +506,27 @@ export default function LandingPage({ onPlay }) {
       className={styles.landingContainer}
       onClick={handleUserInteraction}
       onTouchStart={handleUserInteraction}
-      onMouseMove={handleUserInteraction}
     >
       <div ref={gradientRef} className={styles.gradientBackground} />
       <audio ref={audioRef} preload="auto" />
       
       <div className={styles.content}>
-        <h1 ref={titleRef} className={styles.title}>
-          Guess The Beat by EST
-        </h1>
+        <div className={styles.titleContainer}>
+          <h1 ref={titleRef} className={styles.title}>
+            <span className={styles.titleLine}>Guess</span>
+            <span className={styles.titleLine}>the</span>
+            <span className={styles.titleLine}>BEAT</span>
+          </h1>
+          <div ref={byEstRef} className={styles.byEst}>
+            by EST
+          </div>
+        </div>
         <button
           ref={buttonRef}
           className={styles.playButton}
-          onClick={(e) => {
-            handleUserInteraction();
+          onClick={async (e) => {
+            e.stopPropagation();
+            await handleUserInteraction();
             handlePlayClick();
           }}
         >
