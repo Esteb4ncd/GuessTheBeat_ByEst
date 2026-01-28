@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import styles from './Game.module.css';
 
 export default function Game() {
@@ -30,11 +30,30 @@ export default function Game() {
     { value: 'spanish', label: 'Spanish/Latin' },
   ];
 
+  const generateOptions = useCallback(() => {
+    if (tracks.length === 0) return;
+
+    const currentTrack = tracks[currentTrackIndex];
+    const wrongTracks = tracks
+      .filter((_, index) => index !== currentTrackIndex)
+      .sort(() => Math.random() - 0.5)
+      .slice(0, 3);
+
+    const allOptions = [
+      { ...currentTrack, isCorrect: true },
+      ...wrongTracks.map((track) => ({ ...track, isCorrect: false })),
+    ].sort(() => Math.random() - 0.5);
+
+    setOptions(allOptions);
+    setSelectedAnswer(null);
+    setShowResult(false);
+  }, [tracks, currentTrackIndex]);
+
   useEffect(() => {
     if (gameStarted && tracks.length > 0 && currentTrackIndex < TOTAL_QUESTIONS) {
       generateOptions();
     }
-  }, [currentTrackIndex, tracks, gameStarted]);
+  }, [currentTrackIndex, tracks, gameStarted, generateOptions]);
 
   const startGame = async () => {
     setLoading(true);
@@ -61,25 +80,6 @@ export default function Game() {
     } finally {
       setLoading(false);
     }
-  };
-
-  const generateOptions = () => {
-    if (tracks.length === 0) return;
-
-    const currentTrack = tracks[currentTrackIndex];
-    const wrongTracks = tracks
-      .filter((_, index) => index !== currentTrackIndex)
-      .sort(() => Math.random() - 0.5)
-      .slice(0, 3);
-
-    const allOptions = [
-      { ...currentTrack, isCorrect: true },
-      ...wrongTracks.map((track) => ({ ...track, isCorrect: false })),
-    ].sort(() => Math.random() - 0.5);
-
-    setOptions(allOptions);
-    setSelectedAnswer(null);
-    setShowResult(false);
   };
 
   const playPreview = () => {
