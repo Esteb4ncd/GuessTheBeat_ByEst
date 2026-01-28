@@ -7,7 +7,7 @@ import styles from './LandingPage.module.css';
 export default function LandingPage({ onPlay }) {
   const [backgroundTracks, setBackgroundTracks] = useState([]);
   const [currentTrackIndex, setCurrentTrackIndex] = useState(0);
-  const [musicEnabled, setMusicEnabled] = useState(false);
+  const [musicEnabled, setMusicEnabled] = useState(true);
   const audioRef = useRef(null);
   const titleRef = useRef(null);
   const byEstRef = useRef(null);
@@ -16,6 +16,8 @@ export default function LandingPage({ onPlay }) {
   const gradientRef = useRef(null);
   const musicIntervalsRef = useRef({ fadeTimeout: null, volumeChangeInterval: null, fadeOutInterval: null });
   const hasStartedMusicRef = useRef(false);
+  const hasInteractedRef = useRef(false);
+  const autoStartedRef = useRef(false);
 
   // Fetch background music tracks
   useEffect(() => {
@@ -36,6 +38,35 @@ export default function LandingPage({ onPlay }) {
 
     fetchBackgroundTracks();
   }, []);
+
+  // Autoplay on load (muted). Browsers typically allow muted autoplay.
+  useEffect(() => {
+    if (!musicEnabled) return;
+    if (autoStartedRef.current) return;
+    if (!audioRef.current) return;
+    if (!backgroundTracks.length) return;
+
+    const audio = audioRef.current;
+    const track = backgroundTracks[currentTrackIndex] || backgroundTracks[0];
+    if (!track?.preview_url) return;
+
+    autoStartedRef.current = true;
+
+    // Muted autoplay: starts immediately on page open without user gesture.
+    audio.muted = true;
+    audio.volume = 0;
+    audio.src = track.preview_url;
+
+    audio.play()
+      .then(() => {
+        // Playback has started (muted). Allow subsequent track transitions to call play().
+        hasStartedMusicRef.current = true;
+      })
+      .catch(() => {
+        // If a browser still blocks autoplay, we’ll start on first user interaction.
+        autoStartedRef.current = false;
+      });
+  }, [musicEnabled, backgroundTracks, currentTrackIndex]);
 
   // GSAP animations on mount
   useEffect(() => {
@@ -159,7 +190,7 @@ export default function LandingPage({ onPlay }) {
       const track = backgroundTracks[trackIndex];
       if (!track?.preview_url) return false;
 
-      // Ensure first play happens from a user gesture to avoid autoplay blocking.
+      // If autoplay failed, enforce a user gesture for the first unmuted play.
       if (!fromUserGesture && !hasStartedMusicRef.current) return false;
 
       // Pause and reset before changing src to avoid AbortError
@@ -170,6 +201,7 @@ export default function LandingPage({ onPlay }) {
       
       audio.src = track.preview_url;
       audio.volume = 0;
+      audio.muted = !hasInteractedRef.current;
 
       // Wait for audio to be ready before playing
       const playAudio = async () => {
@@ -181,7 +213,7 @@ export default function LandingPage({ onPlay }) {
           if (error?.name === 'AbortError') {
             return false;
           }
-          // NotAllowedError can happen if a browser blocks autoplay.
+          // NotAllowedError can happen if a browser blocks autoplay (especially unmuted).
           if (error?.name !== 'NotAllowedError') {
             console.error('Error playing background music:', error);
           }
@@ -268,8 +300,9 @@ export default function LandingPage({ onPlay }) {
       
       audio.src = track.preview_url;
       audio.volume = 0;
+      audio.muted = !hasInteractedRef.current;
 
-      // If we've not started music from a user gesture yet, do not attempt play() here.
+      // If we haven't started playback at all yet, don't attempt play() here.
       if (!hasStartedMusicRef.current) return;
 
       // Wait for audio to load before playing to avoid AbortError
@@ -484,19 +517,25 @@ export default function LandingPage({ onPlay }) {
 
   // Enable music on first user interaction (click anywhere)
   const handleUserInteraction = async () => {
-    if (!musicEnabled) {
-      setMusicEnabled(true);
+    hasInteractedRef.current = true;
+    if (!musicEnabled) setMusicEnabled(true);
+
+    const audio = audioRef.current;
+    if (audio) {
+      // Unmute and fade up smoothly after first interaction.
+      audio.muted = false;
+      gsap.killTweensOf(audio);
+      gsap.to(audio, { volume: 0.3, duration: 1.2, ease: 'power1.out' });
     }
 
-    // Only do the "first play" once, and do it inside the user gesture.
-    if (hasStartedMusicRef.current) return;
-    if (!backgroundTracks.length) return;
-
-    const started = await startTrack(currentTrackIndex, { fromUserGesture: true });
-    if (started) {
-      hasStartedMusicRef.current = true;
-      // Trigger useEffect to start transitions & subsequent tracks
-      setCurrentTrackIndex((prev) => prev);
+    // If autoplay failed, start playback now (inside user gesture)
+    if (!hasStartedMusicRef.current) {
+      if (!backgroundTracks.length) return;
+      const started = await startTrack(currentTrackIndex, { fromUserGesture: true });
+      if (started) {
+        hasStartedMusicRef.current = true;
+        setCurrentTrackIndex((prev) => prev);
+      }
     }
   };
 
@@ -508,7 +547,7 @@ export default function LandingPage({ onPlay }) {
       onTouchStart={handleUserInteraction}
     >
       <div ref={gradientRef} className={styles.gradientBackground} />
-      <audio ref={audioRef} preload="auto" />
+      <audio ref={audioRef} preload="auto" muted />
       
       <div className={styles.content}>
         <div className={styles.titleContainer}>
