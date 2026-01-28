@@ -1,4 +1,4 @@
-import { Geist, Geist_Mono } from "next/font/google";
+import { Geist, Geist_Mono, Londrina_Sketch } from "next/font/google";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -11,6 +11,12 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
+const londrinaSketch = Londrina_Sketch({
+  weight: "400",
+  variable: "--font-londrina-sketch",
+  subsets: ["latin"],
+});
+
 export const metadata = {
   title: "Guess The Beat by EST",
   description: "Test your music knowledge by guessing songs from 5-second previews!",
@@ -19,7 +25,7 @@ export const metadata = {
 export default function RootLayout({ children }) {
   return (
     <html lang="en">
-      <body className={`${geistSans.variable} ${geistMono.variable}`}>
+      <body className={`${geistSans.variable} ${geistMono.variable} ${londrinaSketch.variable}`}>
         {children}
       </body>
     </html>
