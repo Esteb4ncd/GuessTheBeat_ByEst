@@ -22,11 +22,19 @@
   position: relative;
   z-index: 1;
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
   align-items: center;
-  justify-content: center;
+  justify-content: space-between;
   gap: 3rem;
-  text-align: center;
+  padding: 2rem;
+  width: 100%;
+  max-width: 1400px;
+  height: 100%;
+}
+
+.titleContainer {
+  position: relative;
+  display: inline-block;
 }
 
 .title {
@@ -39,49 +47,90 @@
   text-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
   letter-spacing: 0.02em;
   line-height: 1.1;
+  text-align: left;
+  display: flex;
+  flex-direction: column;
+}
+
+.titleLine {
+  display: block;
+}
+
+.byEst {
+  position: absolute;
+  bottom: 0.5em;
+  right: -0.5em;
+  font-family: var(--font-londrina-sketch), "Londrina Sketch", sans-serif;
+  font-weight: 400;
+  font-size: clamp(2rem, 5vw, 4rem);
+  color: white;
+  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+  transform: rotate(-12deg);
+  transform-origin: bottom right;
+  white-space: nowrap;
+  z-index: 2;
 }
 
 .playButton {
-  background: rgba(255, 255, 255, 0.95);
-  color: #667eea;
-  border: none;
-  padding: 1.5rem 4rem;
-  font-size: clamp(1.5rem, 4vw, 2.5rem);
-  border-radius: 50px;
+  background: rgba(255, 255, 255, 0.15);
+  color: white;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  padding: 1.2rem 3rem;
+  font-size: clamp(1.8rem, 4vw, 3rem);
+  border-radius: 12px;
   cursor: pointer;
-  font-weight: bold;
-  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+  font-weight: 400;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
   transition: all 0.3s ease;
-  font-family: var(--font-geist-sans), sans-serif;
-  text-transform: uppercase;
-  letter-spacing: 0.1em;
+  font-family: var(--font-londrina-sketch), "Londrina Sketch", sans-serif;
+  letter-spacing: 0.05em;
   opacity: 1;
   transform: scale(1);
   visibility: visible;
+  backdrop-filter: blur(10px);
+  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+  align-self: center;
+  margin-right: 4rem;
 }
 
 .playButton:hover {
-  background: white;
-  transform: translateY(-5px);
-  box-shadow: 0 15px 50px rgba(0, 0, 0, 0.4);
+  background: rgba(255, 255, 255, 0.25);
+  border-color: rgba(255, 255, 255, 0.5);
+  transform: translateY(-3px);
+  box-shadow: 0 6px 25px rgba(0, 0, 0, 0.3);
 }
 
 .playButton:active {
-  transform: translateY(-2px);
+  transform: translateY(-1px);
+  background: rgba(255, 255, 255, 0.2);
 }
 
 @media (max-width: 768px) {
   .content {
+    flex-direction: column;
     gap: 2rem;
     padding: 2rem;
+    align-items: flex-start;
+    justify-content: center;
+  }
+
+  .titleContainer {
+    width: 100%;
   }
 
   .title {
     font-size: clamp(3rem, 20vw, 8rem);
   }
 
+  .byEst {
+    font-size: clamp(1.5rem, 5vw, 2.5rem);
+    right: -0.4em;
+    bottom: 0.3em;
+  }
+
   .playButton {
-    padding: 1.2rem 3rem;
-    font-size: clamp(1.2rem, 5vw, 2rem);
+    padding: 1rem 2.5rem;
+    font-size: clamp(1.5rem, 5vw, 2.5rem);
+    align-self: center;
   }
 }
