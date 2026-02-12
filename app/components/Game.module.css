@@ -328,6 +328,10 @@
 }
 
 @media (max-width: 768px) {
+  .container {
+    padding: 1.5rem 1.25rem 2.5rem;
+  }
+
   .title {
     font-size: 2rem;
   }
@@ -339,7 +343,7 @@
   }
 
   .gameContent {
-    padding: 1.5rem;
+    padding: 1.5rem 1.25rem 1.75rem;
   }
 
   .categoryGrid {
@@ -348,5 +352,51 @@
 
   .startScreen {
     padding: 2rem 1.5rem;
+  }
+
+   .backButton img {
+    width: 64px;
+  }
+}
+
+@media (max-width: 480px) {
+  .container {
+    padding: 1.25rem 1rem 2rem;
+  }
+
+  .startScreen,
+  .gameOverScreen {
+    padding: 1.75rem 1.25rem;
+  }
+
+  .gameContent {
+    padding: 1.25rem 1rem 1.5rem;
+  }
+
+  .title {
+    font-size: 1.8rem;
+  }
+
+  .description {
+    font-size: 1rem;
+  }
+
+  .score,
+  .questionNumber {
+    font-size: 0.95rem;
+    padding: 0.4rem 1.1rem;
+  }
+
+  .option {
+    padding: 1.1rem 1rem;
+  }
+
+  .startButton {
+    padding: 1.5rem 3rem;
+    font-size: 1.1rem;
+  }
+
+  .backButton img {
+    width: 56px;
   }
 }
