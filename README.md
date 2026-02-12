@@ -1,3 +1,5 @@
+https://guess-the-beat-by-est.vercel.app/
+
 # 🎵 Guess The Beat by EST
 
 A fun music guessing game built with Next.js and the Deezer API. Listen to 5-second previews of songs and test your music knowledge!
