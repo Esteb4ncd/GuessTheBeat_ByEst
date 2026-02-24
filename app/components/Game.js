@@ -95,19 +95,18 @@ export default function Game({ initialCategory = 'all', autoStart = false, onBac
   }, [autoStart, initialCategory]);
 
   const playPreview = () => {
-    if (audioRef.current) {
-      audioRef.current.currentTime = 0;
-      audioRef.current.play();
-      setIsPlaying(true);
+    if (!audioRef.current) return;
+    audioRef.current.currentTime = 0;
+    audioRef.current.play();
+    setIsPlaying(true);
 
-      // Stop after 5 seconds
-      setTimeout(() => {
-        if (audioRef.current) {
-          audioRef.current.pause();
-          setIsPlaying(false);
-        }
-      }, 5000);
-    }
+    // Stop after 5 seconds
+    setTimeout(() => {
+      if (audioRef.current) {
+        audioRef.current.pause();
+        setIsPlaying(false);
+      }
+    }, 5000);
   };
 
   const handleAnswerSelect = (option) => {
@@ -240,8 +239,30 @@ export default function Game({ initialCategory = 'all', autoStart = false, onBac
                 className={styles.playButton}
                 onClick={playPreview}
                 disabled={isPlaying}
+                type="button"
+                aria-label={isPlaying ? 'Playing preview' : 'Play 5 second preview'}
               >
-                {isPlaying ? 'Playing...' : 'Play Preview (5 seconds)'}
+                <span
+                  className={`${styles.playButtonIcon} ${
+                    isPlaying ? styles.playButtonIconActive : ''
+                  }`}
+                  aria-hidden="true"
+                >
+                  <svg
+                    className={styles.playIconSvg}
+                    viewBox="0 0 32 32"
+                    focusable="false"
+                  >
+                    {isPlaying ? (
+                      <>
+                        <rect x="9" y="8" width="4" height="16" rx="1.2" />
+                        <rect x="19" y="8" width="4" height="16" rx="1.2" />
+                      </>
+                    ) : (
+                      <path d="M11 8.5c0-1.2 1.3-1.9 2.3-1.3l8.4 5.2c1.1 0.7 1.1 2.3 0 3l-8.4 5.2C12.3 21.2 11 20.5 11 19.3v-10.8z" />
+                    )}
+                  </svg>
+                </span>
               </button>
             </div>
 
