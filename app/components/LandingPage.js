@@ -54,6 +54,15 @@ export default function LandingPage({ onPlay, initialStep = 'landing' }) {
     { value: 'spanish', label: 'Spanish/Latin' },
   ];
 
+  const categoryVisualClasses = {
+    all: styles.categoryTileAll,
+    pop: styles.categoryTilePop,
+    'r&b': styles.categoryTileRnB,
+    rock: styles.categoryTileRock,
+    'hip-hop': styles.categoryTileHipHop,
+    spanish: styles.categoryTileSpanish,
+  };
+
   // Autoplay background music on page open (best-effort):
   // 1) Try unmuted play (some browsers allow it)
   // 2) If blocked, fall back to muted autoplay (widely allowed)
@@ -668,7 +677,9 @@ export default function LandingPage({ onPlay, initialStep = 'landing' }) {
             {categories.map((c) => (
               <button
                 key={c.value}
-                className={`${styles.categoryTile} ${selectedCategory === c.value ? styles.categoryTileSelected : ''}`}
+                className={`${styles.categoryTile} ${
+                  categoryVisualClasses[c.value] || ''
+                } ${selectedCategory === c.value ? styles.categoryTileSelected : ''}`}
                 onClick={async (e) => {
                   e.stopPropagation();
                   await handleUserInteraction();
