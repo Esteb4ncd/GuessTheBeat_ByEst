@@ -272,6 +272,7 @@ export default function Game({ initialCategory = 'all', autoStart = false, onBac
                 const isCorrect = option.isCorrect;
                 const showCorrect = showResult && isCorrect;
                 const showWrong = showResult && isSelected && !isCorrect;
+                const artworkUrl = option.album?.images?.[0]?.url;
 
                 return (
                   <button
@@ -285,12 +286,23 @@ export default function Game({ initialCategory = 'all', autoStart = false, onBac
                     disabled={showResult}
                   >
                     <div className={styles.optionContent}>
+                      {artworkUrl && (
+                        <div className={styles.optionArtwork}>
+                          <img
+                            src={artworkUrl}
+                            alt={`${option.name} cover art`}
+                            loading="lazy"
+                          />
+                        </div>
+                      )}
                       <div className={styles.optionText}>
                         <strong>{option.name}</strong>
                         <span className={styles.artist}>{option.artists[0]?.name}</span>
                       </div>
-                      {showCorrect && <span className={styles.checkmark}>Correct</span>}
-                      {showWrong && <span className={styles.cross}>Wrong</span>}
+                      <div className={styles.optionStatus}>
+                        {showCorrect && <span className={styles.checkmark}>Correct</span>}
+                        {showWrong && <span className={styles.cross}>Wrong</span>}
+                      </div>
                     </div>
                   </button>
                 );

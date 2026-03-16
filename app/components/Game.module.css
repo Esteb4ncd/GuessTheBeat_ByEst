@@ -261,7 +261,7 @@
   background: rgba(255, 255, 255, 0.12);
   border: 2px solid rgba(255, 255, 255, 0.18);
   border-radius: 12px;
-  padding: 1.5rem;
+  padding: 1.1rem 1.25rem;
   cursor: pointer;
   transition: all 0.2s;
   text-align: left;
@@ -296,14 +296,30 @@
 
 .optionContent {
   display: flex;
-  justify-content: space-between;
   align-items: center;
+  gap: 1rem;
 }
 
 .optionText {
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
+}
+
+.optionArtwork {
+  width: 56px;
+  height: 56px;
+  border-radius: 12px;
+  overflow: hidden;
+  flex-shrink: 0;
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.4);
+}
+
+.optionArtwork img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
 }
 
 .optionText strong {
@@ -314,6 +330,14 @@
 .artist {
   font-size: 0.9rem;
   color: rgba(255, 255, 255, 0.75);
+}
+
+.optionStatus {
+  margin-left: auto;
+  padding-left: 0.75rem;
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
 }
 
 .checkmark {
@@ -446,7 +470,7 @@
   }
 
   .option {
-    padding: 1.1rem 1rem;
+    padding: 1rem 0.85rem;
   }
 
   .startButton {
