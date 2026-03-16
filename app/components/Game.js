@@ -255,11 +255,29 @@ export default function Game({ initialCategory = 'all', autoStart = false, onBac
                   >
                     {isPlaying ? (
                       <>
-                        <rect x="9" y="8" width="4" height="16" rx="1.2" />
-                        <rect x="19" y="8" width="4" height="16" rx="1.2" />
+                        <circle
+                          cx="16"
+                          cy="16"
+                          r="10"
+                          fill="none"
+                          stroke="rgba(255, 255, 255, 0.9)"
+                          strokeWidth="1.8"
+                        />
+                        <rect x="12" y="11" width="3.6" height="10" rx="1.4" />
+                        <rect x="16.4" y="11" width="3.6" height="10" rx="1.4" />
                       </>
                     ) : (
-                      <path d="M11 8.5c0-1.2 1.3-1.9 2.3-1.3l8.4 5.2c1.1 0.7 1.1 2.3 0 3l-8.4 5.2C12.3 21.2 11 20.5 11 19.3v-10.8z" />
+                      <>
+                        <circle
+                          cx="16"
+                          cy="16"
+                          r="10"
+                          fill="none"
+                          stroke="rgba(255, 255, 255, 0.9)"
+                          strokeWidth="1.8"
+                        />
+                        <path d="M13.5 11.2c0-0.9 1.0-1.5 1.8-1.1l5.5 3.3c0.9 0.5 0.9 1.7 0 2.2l-5.5 3.3c-0.8 0.5-1.8-0.1-1.8-1.1v-6.6z" />
+                      </>
                     )}
                   </svg>
                 </span>
