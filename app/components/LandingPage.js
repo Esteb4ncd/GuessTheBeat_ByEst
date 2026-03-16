@@ -15,6 +15,7 @@ export default function LandingPage({ onPlay, initialStep = 'landing' }) {
 
   const [selectedCategory, setSelectedCategory] = useState('all');
   const audioRef = useRef(null);
+  const [isMuted, setIsMuted] = useState(true);
   const titleRef = useRef(null);
   const byEstRef = useRef(null);
   const buttonRef = useRef(null);
@@ -87,7 +88,7 @@ export default function LandingPage({ onPlay, initialStep = 'landing' }) {
         await audio.play();
         hasStartedMusicRef.current = true;
         // If unmuted autoplay worked, fade in to target volume
-        if (!muted) {
+        if (!muted && !isMuted) {
           gsap.killTweensOf(audio);
           gsap.to(audio, { volume: 0.3, duration: 1.2, ease: 'power1.out' });
         }
@@ -98,13 +99,16 @@ export default function LandingPage({ onPlay, initialStep = 'landing' }) {
     };
 
     (async () => {
-      const okUnmuted = await tryPlay({ muted: false });
-      if (okUnmuted) return;
+      // If user has not muted, try unmuted autoplay first
+      if (!isMuted) {
+        const okUnmuted = await tryPlay({ muted: false });
+        if (okUnmuted) return;
+      }
 
-      // fallback: muted autoplay
+      // Fallback: muted autoplay (or always when isMuted is true)
       await tryPlay({ muted: true });
     })();
-  }, [musicEnabled, backgroundTracks, currentTrackIndex]);
+  }, [musicEnabled, backgroundTracks, currentTrackIndex, isMuted]);
 
   const switchMusicToCategory = useCallback(async (category) => {
     const audio = audioRef.current;
@@ -129,16 +133,28 @@ export default function LandingPage({ onPlay, initialStep = 'landing' }) {
         // keep muted state consistent
         audio.muted = !hasInteractedRef.current;
         audio.play().catch(() => {});
-        // Fade back up if user has interacted (audible), else keep at 0
-        if (hasInteractedRef.current) {
+        // Fade back up if user has interacted (audible) and not manually muted
+        if (hasInteractedRef.current && !isMuted) {
           gsap.killTweensOf(audio);
           gsap.to(audio, { volume: 0.3, duration: 0.9, ease: 'power1.out' });
+        } else {
+          audio.volume = 0;
         }
       }, 650);
     } catch {
       // ignore
     }
-  }, []);
+  }, [isMuted]);
+
+  // Keep background music volume in sync with mute state across track changes
+  useEffect(() => {
+    const audio = audioRef.current;
+    if (!audio) return;
+    if (isMuted) {
+      gsap.killTweensOf(audio);
+      audio.volume = 0;
+    }
+  }, [isMuted, currentTrackIndex]);
 
   // GSAP animations on mount
   useEffect(() => {
@@ -212,9 +228,7 @@ export default function LandingPage({ onPlay, initialStep = 'landing' }) {
     if (!gradientRef.current) return;
 
     const gradient = gradientRef.current;
-    const colors = [
-      { start: '#000000', end: '#000000' },
-    ];
+    const colors = [{ start: '#000000', end: '#000000' }];
 
     let colorIndex = 0;
     let animation = null;
@@ -594,7 +608,11 @@ export default function LandingPage({ onPlay, initialStep = 'landing' }) {
     if (audio) {
       audio.muted = false;
       gsap.killTweensOf(audio);
-      gsap.to(audio, { volume: 0.3, duration: 1.2, ease: 'power1.out' });
+      gsap.to(audio, {
+        volume: isMuted ? 0 : 0.3,
+        duration: 1.2,
+        ease: 'power1.out',
+      });
     }
 
     if (!hasStartedMusicRef.current && backgroundTracks.length) {
@@ -714,16 +732,78 @@ export default function LandingPage({ onPlay, initialStep = 'landing' }) {
       <audio ref={audioRef} preload="auto" muted />
       
       <div className={styles.content}>
-        <div className={styles.titleContainer}>
-          <h1 ref={titleRef} className={styles.title}>
-            <span className={styles.titleLine}>Guess</span>
-            <span className={styles.titleLine}>the</span>
-            <span className={styles.titleLine}>BEAT</span>
-          </h1>
-          <div ref={byEstRef} className={styles.byEst}>
-            by EST
+        <div className={styles.headerRow}>
+          <div className={styles.titleContainer}>
+            <h1 ref={titleRef} className={styles.title}>
+              <span className={styles.titleLine}>Guess</span>
+              <span className={styles.titleLine}>the</span>
+              <span className={styles.titleLine}>BEAT</span>
+            </h1>
+            <div ref={byEstRef} className={styles.byEst}>
+              by EST
+            </div>
           </div>
+          <button
+            type="button"
+            className={styles.landingMuteButton}
+            onClick={(e) => {
+              e.stopPropagation();
+              const audio = audioRef.current;
+              setIsMuted((prev) => {
+                const next = !prev;
+                if (audio) {
+                  audio.muted = false;
+                  gsap.killTweensOf(audio);
+                  gsap.to(audio, {
+                    volume: next ? 0 : 0.3,
+                    duration: 0.5,
+                    ease: 'power1.out',
+                  });
+                }
+                return next;
+              });
+            }}
+            aria-label={isMuted ? 'Unmute background music' : 'Mute background music'}
+          >
+            <span className={styles.landingMuteIcon} aria-hidden="true">
+              <svg
+                className={styles.landingMuteSvg}
+                viewBox="0 0 32 32"
+                focusable="false"
+              >
+                {isMuted ? (
+                  <>
+                    <path d="M6 13.5c0-.8.6-1.5 1.4-1.5H11l4.2-3.5c.9-.7 2.3-.1 2.3,1.1v12.8c0 1.2-1.4 1.8-2.3 1.1L11 20H7.4C6.6 20 6 19.3 6 18.5v-5z" />
+                    <path
+                      d="M21 11l4 4"
+                      stroke="rgba(255, 255, 255, 0.95)"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                    />
+                    <path
+                      d="M25 11l-4 4"
+                      stroke="rgba(255, 255, 255, 0.95)"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                    />
+                  </>
+                ) : (
+                  <>
+                    <path d="M6 13.5c0-.8.6-1.5 1.4-1.5H11l4.2-3.5c.9-.7 2.3-.1 2.3,1.1v12.8c0 1.2-1.4 1.8-2.3 1.1L11 20H7.4C6.6 20 6 19.3 6 18.5v-5z" />
+                    <path
+                      d="M21 11.5c1.2.9 2 2.3 2 3.9s-.8 3-2 3.9"
+                      stroke="rgba(255, 255, 255, 0.95)"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      fill="none"
+                    />
+                  </>
+                )}
+              </svg>
+            </span>
+          </button>
         </div>
+
         <button
           ref={buttonRef}
           className={styles.playButton}

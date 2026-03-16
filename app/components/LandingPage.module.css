@@ -32,6 +32,14 @@
   height: 100%;
 }
 
+.headerRow {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  width: 100%;
+  gap: 1.5rem;
+}
+
 .categoriesContent {
   position: relative;
   z-index: 2;
@@ -327,6 +335,47 @@
   margin-right: 10rem;
 }
 
+.landingMuteButton {
+  position: absolute;
+  top: 1.4rem;
+  right: 1.6rem;
+  background: transparent;
+  border: none;
+  padding: 0.25rem;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: rgba(255, 255, 255, 0.9);
+  transition: transform 0.2s ease, opacity 0.2s ease;
+}
+
+.landingMuteButton:hover {
+  transform: translateY(-2px);
+  opacity: 0.9;
+}
+
+.landingMuteIcon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.6rem;
+  height: 2.6rem;
+  border-radius: 999px;
+  background:
+    radial-gradient(circle at 30% 0%, rgba(255, 255, 255, 0.2), transparent 55%),
+    radial-gradient(circle at 80% 120%, rgba(0, 0, 0, 0.95), rgba(10, 10, 10, 0.98));
+  box-shadow:
+    0 10px 30px rgba(0, 0, 0, 0.55),
+    0 0 0 1px rgba(255, 255, 255, 0.2);
+}
+
+.landingMuteSvg {
+  width: 1.4rem;
+  height: 1.4rem;
+  fill: rgba(255, 255, 255, 0.95);
+}
+
 .playButton:hover {
   transform: translateY(-3px);
   filter: brightness(1.05);
@@ -361,11 +410,20 @@
 
   .content {
     flex-direction: column;
-    gap: 2rem;
+    gap: 1.5rem;
     padding: 1.5rem 0;
     align-items: center;
     justify-content: center;
     height: auto;
+  }
+
+  .landingMuteButton {
+    top: 1.1rem;
+    right: 1.2rem;
+  }
+
+  .headerRow {
+    align-items: flex-start;
   }
 
   .categoriesContent {

@@ -282,6 +282,7 @@ export default function Game({ initialCategory = 'all', autoStart = false, onBac
                   </svg>
                 </span>
               </button>
+
             </div>
 
             <div className={styles.options}>
