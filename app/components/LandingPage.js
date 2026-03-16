@@ -213,14 +213,7 @@ export default function LandingPage({ onPlay, initialStep = 'landing' }) {
 
     const gradient = gradientRef.current;
     const colors = [
-      { start: '#667eea', end: '#764ba2' },
-      { start: '#f093fb', end: '#f5576c' },
-      { start: '#4facfe', end: '#00f2fe' },
-      { start: '#43e97b', end: '#38f9d7' },
-      { start: '#fa709a', end: '#fee140' },
-      { start: '#30cfd0', end: '#330867' },
-      { start: '#a8edea', end: '#fed6e3' },
-      { start: '#ff9a9e', end: '#fecfef' },
+      { start: '#000000', end: '#000000' },
     ];
 
     let colorIndex = 0;
