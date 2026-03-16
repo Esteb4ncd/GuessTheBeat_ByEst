@@ -434,7 +434,8 @@
   }
 
   .options {
-    grid-template-columns: 1fr;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.7rem;
   }
 
   .categoryGrid {
@@ -478,8 +479,26 @@
     padding: 0.4rem 1.1rem;
   }
 
+  .options {
+    grid-template-columns: 1fr 1fr;
+    gap: 0.6rem;
+  }
+
   .option {
-    padding: 0.85rem 0.75rem 0.95rem;
+    padding: 0.5rem 0.6rem 0.65rem;
+    min-height: 110px;
+  }
+
+  .optionArtwork {
+    width: 68%;
+  }
+
+  .optionText strong {
+    font-size: 0.9rem;
+  }
+
+  .artist {
+    font-size: 0.8rem;
   }
 
   .startButton {
