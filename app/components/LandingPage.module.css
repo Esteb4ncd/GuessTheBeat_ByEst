@@ -72,7 +72,7 @@
   opacity: 1;
 }
 
-.backButton img {
+.backButtonImage {
   display: block;
   width: 80px;
   height: auto;
@@ -154,7 +154,7 @@
   z-index: 0;
 }
 
-.categoryTile > * {
+.categoryTileLabel {
   position: relative;
   z-index: 1;
 }
@@ -462,7 +462,7 @@
     margin-right: 0;
   }
 
-  .backButton img {
+  .backButtonImage {
     width: 64px;
   }
 }
@@ -496,7 +496,7 @@
     font-size: clamp(2rem, 9vw, 3.4rem);
   }
 
-  .backButton img {
+  .backButtonImage {
     width: 56px;
   }
 }

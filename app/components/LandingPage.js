@@ -674,7 +674,7 @@ export default function LandingPage({ onPlay, initialStep = 'landing' }) {
                 goToLanding();
               }}
             >
-              <img src="/assets/goBack_Button.svg" alt="" />
+              <img className={styles.backButtonImage} src="/assets/goBack_Button.svg" alt="" />
             </button>
           </div>
           <div className={styles.categoriesHeader}>
@@ -698,7 +698,7 @@ export default function LandingPage({ onPlay, initialStep = 'landing' }) {
                   switchMusicToCategory(c.value);
                 }}
               >
-                {c.label}
+                <span className={styles.categoryTileLabel}>{c.label}</span>
               </button>
             ))}
           </div>

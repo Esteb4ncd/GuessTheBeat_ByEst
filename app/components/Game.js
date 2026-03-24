@@ -1,4 +1,3 @@
-// comm
 'use client';
 
 import { useState, useEffect, useRef, useCallback } from 'react';
@@ -218,7 +217,7 @@ export default function Game({ initialCategory = 'all', autoStart = false, onBac
     <div className={styles.container}>
       <div className={styles.gameHeader}>
         <button className={styles.backButton} type="button" aria-label="Go back" onClick={onBack}>
-          <img src="/assets/goBack_Button.svg" alt="" />
+          <img className={styles.backButtonImage} src="/assets/goBack_Button.svg" alt="" />
         </button>
         <div className={styles.score}>Score: {score} / {TOTAL_QUESTIONS}</div>
         <div className={styles.questionNumber}>
@@ -309,6 +308,7 @@ export default function Game({ initialCategory = 'all', autoStart = false, onBac
                       {artworkUrl && (
                         <div className={styles.optionArtwork}>
                           <img
+                            className={styles.optionArtworkImage}
                             src={artworkUrl}
                             alt={`${option.name} cover art`}
                             loading="lazy"
@@ -316,7 +316,7 @@ export default function Game({ initialCategory = 'all', autoStart = false, onBac
                         </div>
                       )}
                       <div className={styles.optionText}>
-                        <strong>{option.name}</strong>
+                        <strong className={styles.optionTitle}>{option.name}</strong>
                         <span className={styles.artist}>{option.artists[0]?.name}</span>
                       </div>
                       <div className={styles.optionStatus}>
